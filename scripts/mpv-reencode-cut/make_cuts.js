@@ -7,7 +7,6 @@ const plain = "\x1b[0m";
 const green = "\x1b[32m";
 const purple = "\x1b[34m";
 
-// Parse command line arguments early
 const argv = process.argv.slice(2);
 const [indir, optionsStr, filename, cutsStr] = argv;
 const options = JSON.parse(optionsStr || "{}");
@@ -56,29 +55,16 @@ async function mergeCuts(tempPath, filepaths, outpath) {
     filepaths.map((filepath) => `file '${ffmpegEscapeFilepath(filepath)}'`).join("\n")
   );
 
-  // First, concatenate the reencoded segments without reencoding into a temporary file.
-  const mergedTempPath = outpath + ".tmp.mp4";
+  // Concatenate the reencoded segments without reencoding into a temporary file.
   await ffmpeg([
     "-f", "concat",
     "-safe", "0",
     "-i", mergeFile,
     "-c", "copy",
-    mergedTempPath,
-  ]);
-
-  // Now reencode the merged file to ensure the final output is at the desired lower bitrate.
-  await ffmpeg([
-    "-i", mergedTempPath,
-    "-vf", "scale=1920:1080",
-    "-c:v", options.encoder || "libx264",
-    "-b:v", options.bitrate || "3.5k",
-    "-c:a", "aac",
-    "-b:a", "160k",
     outpath,
   ]);
 
   await fs.promises.unlink(mergeFile);
-  await fs.promises.unlink(mergedTempPath);
   for (const filepath of filepaths) {
     await fs.promises.unlink(filepath);
   }
