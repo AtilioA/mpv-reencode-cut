@@ -40,7 +40,6 @@ async function renderCut(inpath, outpath, start, duration) {
     "-ss", start,
     "-t", duration,
     "-i", inpath,
-    "-vf", "scale=1920:1080",
     "-c:v", options.encoder || "libx264",
     "-b:v", options.bitrate || "3M",
     "-c:a", "aac",
