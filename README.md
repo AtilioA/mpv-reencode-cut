@@ -1,14 +1,13 @@
 # mpv-reencode-cut
 
-`mpv-reencode-cut` is a modular, scriptable video cutting tool for [mpv](https://mpv.io), designed for users who want both interactive control for creating clips from cuts while re-encoding files, which allows for more precise timing compared to keyframe-based cutting.
-
+`mpv-reencode-cut` is a modular, scripting video cutting tool for [mpv](https://mpv.io), designed for users who want interactive control over clip creation while re-encoding files—enabling more precise timing than traditional keyframe-based cutting.
 
 ✨ `mpv-reencode-cut` offers:
 
 - **Multiple cuts per video**
-- **Optional merging** of cut segments into a single output
+- **Optional merging** of cut segments into a single output (when multiple cuts are defined)
 - **Re-encoding**, enabling precise timing and customizable compression
-- A built-in, in-player **OSD menu** (via `Ctrl + e`) to change settings such as:
+- A built-in, in-player **OSD menu** (via `Ctrl + e`) to change settings on the fly such as:
   - Video codec
   - Bitrate
   - Multi-cut output mode
@@ -19,9 +18,7 @@ Perfect for sharing clips, creating highlights, or trimming videos quickly where
 
 ## ✂️ Features
 
-- Set **start** and **end** times for multiple cuts with simple hotkeys.
-- Supports both **separate** file output or **merged** cuts.
-- Automatically launches an external **Node.js + ffmpeg** cut renderer.
+- Easily set **start** and **end** times for multiple cuts with `g` and `h` keys.
 - Allows real-time adjustment of:
   - **Video encoder** (auto-detected from `ffmpeg`)
   - **Bitrate** (selectable presets)
@@ -33,21 +30,40 @@ Perfect for sharing clips, creating highlights, or trimming videos quickly where
 
 ## 📦 Installation
 
-1. **Download the latest version** of `mpv-reencode-cut` from the [Releases](https://github.com/yourusername/mpv-reencode-cut/releases) section.
-2. Extract the contents to your mpv scripts directory, such as:
+1. **Download the latest version** of `mpv-reencode-cut` from the [Releases](https://github.com/AtilioA/mpv-reencode-cut/releases/latest) section.
+2. Extract the contents to your mpv config directory, such as:
 
-```
+```bash
 # On Linux
-~/.config/mpv/scripts/mpv-reencode-cut/
+~/.config/mpv/
 
 # On Windows
-%APPDATA%\mpv\scripts\mpv-reencode-cut\
+%APPDATA%\mpv\
 
 # or for portable builds:
-mpv/portable_config/scripts/mpv-reencode-cut/
+mpv/portable_config/
 ```
 
 3. Ensure [`node`](https://nodejs.org/) and [`ffmpeg`](https://www.ffmpeg.org/download.html) are available in your system `PATH`.
+
+---
+
+## 🎬 Usage
+
+Open a video in mpv and use the following keybindings:
+
+| Key        | Action                    |
+|------------|---------------------------|
+| `g`        | Set cut start at current time |
+| `h`        | Set cut end at current time   |
+| `G`        | Set cut start at beginning    |
+| `H`        | Set cut end at end            |
+| `r`        | Render cuts |
+| `Ctrl + g` | Toggle cut mode (merge/separate) |
+| `Ctrl + h` | Clear all cuts                |
+| `Ctrl + e` | Open configuration menu       |
+
+Rendered files are saved to the `output_dir` (default is the same as the input file's directory). Output filenames include cut indices and timestamps.
 
 ---
 
@@ -65,30 +81,9 @@ Use arrow keys to change settings:
 - `← / →`: change the current option's value
 - `Enter / Esc`: save and exit
 
+Encoders are dynamically listed based on your ffmpeg build output, and default to `libx264`.
+
 All changes are persisted to your `script-opts` config (`mpv-reencode-cut.conf`) file.
-
----
-
-## 🎬 Usage
-
-Open a video in mpv and use the following keybindings:
-
-| Key        | Action                    |
-|------------|---------------------------|
-| `g`        | Set cut start at current time |
-| `h`        | Set cut end at current time   |
-| `G`        | Set cut start at beginning    |
-| `H`        | Set cut end at end            |
-| `r`        | Render cuts (launches Node.js + ffmpeg) |
-| `Ctrl + g` | Toggle cut mode (merge/separate) |
-| `Ctrl + h` | Clear all cuts                |
-| `Ctrl + e` | Open configuration menu       |
-
----
-
-## 📁 Output
-
-Rendered files are saved to the `output_dir` (default is the same as the input file’s directory). Output filenames include cut indices and timestamps.
 
 ---
 
@@ -99,15 +94,6 @@ Rendered files are saved to the `output_dir` (default is the same as the input f
 - [ffmpeg](https://ffmpeg.org)
 
 Make sure both `ffmpeg` and `node` are available in your command-line environment/'PATH'.
-
----
-
-## 💡 Advanced tips
-
-- Press `Ctrl+g` to quickly switch between `merge` and `separate` cut modes.
-- Encoders are dynamically listed based on your ffmpeg build output, and default to `libx264`.
-
----
 
 ## 👥 Contributing
 
