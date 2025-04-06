@@ -1,0 +1,32 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install zip
+        run: sudo apt-get install -y zip
+
+      - name: Create archive
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: zip -r mpv-reencode-cut.zip scripts script-opts
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: |
+            mpv-reencode-cut.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true
