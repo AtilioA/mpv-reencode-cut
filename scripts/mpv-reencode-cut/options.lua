@@ -8,7 +8,7 @@ local msg = require "mp.msg"
 local function get_config_file_path(identifier)
     identifier = identifier or mp.get_script_name() or "default"
     local filename = identifier .. ".conf"
-    local preferred_path = "script-opts/" .. filename
+    local preferred_path = "mpv/script-opts/" .. filename
     local found_path = mp.find_config_file(preferred_path)
     if found_path then
         return found_path
