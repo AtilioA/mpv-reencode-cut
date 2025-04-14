@@ -13,6 +13,9 @@ local init_options = {
     multi_cut_mode = "separate",
     encoder = "libx264",
     bitrate = "3M",
+    audio_encoder = "libmp3lame",
+    audio_bitrate = "192k",
+    audio_only = false,
 }
 
 mp.options.read_options(init_options, "mpv-reencode-cut")

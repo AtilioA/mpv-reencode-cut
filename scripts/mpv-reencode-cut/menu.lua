@@ -16,6 +16,33 @@ local function table_contains(tbl, val)
     return false
 end
 
+-- Sort encoders with popular ones first
+local function sort_encoders_by_popularity(encoders, popular_encoders)
+    local result = {}
+
+    -- Add popular encoders first in the specified order
+    for _, enc in ipairs(popular_encoders) do
+        if table_contains(encoders, enc) then
+            table.insert(result, enc)
+            -- Remove from original list to avoid duplicates
+            for i, v in ipairs(encoders) do
+                if v == enc then
+                    table.remove(encoders, i)
+                    break
+                end
+            end
+        end
+    end
+
+    -- Add remaining encoders in lexicographical order
+    table.sort(encoders)
+    for _, enc in ipairs(encoders) do
+        table.insert(result, enc)
+    end
+
+    return result
+end
+
 -- Platform detection and path handling
 local function is_windows()
     return package.config:sub(1, 1) == '\\'
@@ -41,14 +68,16 @@ local menu_items = {} -- each item: { name, value, choices }
 -- Build menu items (encoder, bitrate, multi-cut mode)
 local function build_menu_items()
     menu_items = {}
+    local options = options_module.get_options()
 
     -- Get available video encoders from ffmpeg output
-    local function get_available_encoders()
+    local function get_available_video_encoders()
         local encoders = {}
         local res = mp.utils.subprocess({ args = { "ffmpeg", "-encoders" }, capture_stdout = true, capture_stderr = true })
         if res.status ~= 0 and res.killed_by_us == false then
             mp.msg.warn("Could not run ffmpeg -encoders; using default encoder.")
-            mp.osd_message("Could not run ffmpeg -encoders; using default encoders.\nPlease check your ffmpeg installation.", 5)
+            mp.osd_message(
+                "Could not run ffmpeg -encoders; using default encoders.\nPlease check your ffmpeg installation.", 5)
             -- Fallback to default encoders
             return { "libx264", "libx265" }
         end
@@ -65,17 +94,82 @@ local function build_menu_items()
         if #encoders == 0 then
             encoders = { "libx264", "libx265" }
         end
-        table.sort(encoders)
-        return encoders
+
+        -- Popular video encoders to prioritize
+        local popular_video_encoders = { "libx264", "libx265", "h264_nvenc", "hevc_nvenc", "h264_amf", "hevc_amf",
+            "libaom-av1" }
+        return sort_encoders_by_popularity(encoders, popular_video_encoders)
     end
 
-    local available_encoders = get_available_encoders()
+    -- Get available audio encoders from ffmpeg output
+    local function get_available_audio_encoders()
+        local encoders = {}
+        local res = mp.utils.subprocess({ args = { "ffmpeg", "-encoders" }, capture_stdout = true, capture_stderr = true })
+        if res.status ~= 0 and res.killed_by_us == false then
+            mp.msg.warn("Could not run ffmpeg -encoders; using default encoder.")
+            mp.osd_message(
+                "Could not run ffmpeg -encoders; using default encoders.\nPlease check your ffmpeg installation.", 5)
+            -- Fallback to default encoders
+            return { "libmp3lame", "aac" }
+        end
+        for line in res.stdout:gmatch("[^\r\n]+") do
+            -- Look for lines beginning with a space and an 'A' flag (audio encoder)
+            -- Example line: " A..... libmp3lame           MP3 (MPEG audio layer 3)"
+            if line:match("^%s*A") then
+                local enc = line:match("A[%p%w]*%s+(%S+)")
+                if enc and not table_contains(encoders, enc) then
+                    table.insert(encoders, enc)
+                end
+            end
+        end
+        if #encoders == 0 then
+            encoders = { "libmp3lame", "aac" }
+        end
 
-    table.insert(menu_items, { name = "Encoder", value = options.encoder, choices = available_encoders })
-    table.insert(menu_items,
-        { name = "Bitrate", value = options.bitrate, choices = { "500k", "1M", "2M", "3M", "5M", "10M" } })
-    table.insert(menu_items,
-        { name = "Multi-cut handling", value = options.multi_cut_mode, choices = { "separate", "merge" } })
+        -- Popular audio encoders to prioritize
+        local popular_audio_encoders = { "libmp3lame", "aac", "libvorbis", "libopus", "flac" }
+        return sort_encoders_by_popularity(encoders, popular_audio_encoders)
+    end
+
+    -- Add "Audio Only" option first
+    table.insert(menu_items, {
+        name = "Audio only",
+        value = options.audio_only and "yes" or "no",
+        choices = { "no", "yes" }
+    })
+
+    -- Get encoders based on audio_only mode
+    local available_encoders
+    local bitrate_options
+
+    if options.audio_only then
+        available_encoders = get_available_audio_encoders()
+        bitrate_options = { "64k", "128k", "192k", "256k", "320k" }
+    else
+        available_encoders = get_available_video_encoders()
+        bitrate_options = { "500k", "1M", "2M", "3M", "5M", "10M" }
+    end
+
+    -- Add encoder option
+    table.insert(menu_items, {
+        name = options.audio_only and "Audio Encoder" or "Video Encoder",
+        value = options.audio_only and options.audio_encoder or options.encoder,
+        choices = available_encoders
+    })
+
+    -- Add bitrate option
+    table.insert(menu_items, {
+        name = options.audio_only and "Audio Bitrate" or "Video Bitrate",
+        value = options.audio_only and options.audio_bitrate or options.bitrate,
+        choices = bitrate_options
+    })
+
+    -- Add multi-cut option at the end
+    table.insert(menu_items, {
+        name = "Multi-cut handling",
+        value = options.multi_cut_mode,
+        choices = { "separate", "merge" }
+    })
 end
 
 local function draw_menu()
@@ -131,9 +225,21 @@ local function menu_adjust(delta)
     item.value = choices[cur_index]
 
     -- Update the shared options
-    if item.name == "Encoder" then
+    if item.name == "Audio Only" then
+        options.audio_only = (item.value == "yes")
+        -- Rebuild menu items to reflect audio_only change
+        -- Save current selected index
+        local current_selected = menu_selected_index
+        build_menu_items()
+        -- Restore selected index, but ensure it's within bounds
+        menu_selected_index = math.min(current_selected, #menu_items)
+    elseif item.name == "Audio Encoder" then
+        options.audio_encoder = item.value
+    elseif item.name == "Video Encoder" then
         options.encoder = item.value
-    elseif item.name == "Bitrate" then
+    elseif item.name == "Audio Bitrate" then
+        options.audio_bitrate = item.value
+    elseif item.name == "Video Bitrate" then
         options.bitrate = item.value
     elseif item.name == "Multi-cut handling" then
         options.multi_cut_mode = item.value
@@ -157,9 +263,15 @@ local function close_menu()
     osd_overlay:update()
     unbind_menu_keys()
     options_module.save_options()
-    mp.msg.info("Configuration saved: Encoder=" .. options.encoder ..
-        ", Bitrate=" .. options.bitrate ..
-        ", Multi-cut mode=" .. options.multi_cut_mode)
+
+    local current_encoder = options.audio_only and options.audio_encoder or options.encoder
+    local current_bitrate = options.audio_only and options.audio_bitrate or options.bitrate
+
+    mp.msg.info("Configuration saved: " ..
+        (options.audio_only and "Audio Encoder=" or "Video Encoder=") .. current_encoder ..
+        ", " .. (options.audio_only and "Audio Bitrate=" or "Video Bitrate=") .. current_bitrate ..
+        ", Multi-cut mode=" .. options.multi_cut_mode ..
+        ", Audio Only=" .. tostring(options.audio_only))
 end
 
 -- Accept selection and close menu

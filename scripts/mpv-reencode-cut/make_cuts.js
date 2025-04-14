@@ -35,17 +35,32 @@ async function ffmpeg(args) {
 }
 
 async function renderCut(inpath, outpath, start, duration) {
-  const args = [
+  let args = [
     "-ss", start,
     "-t", duration,
     "-i", inpath,
-    "-c:v", options.encoder || "libx264",
-    "-b:v", options.bitrate || "3M",
-    "-c:a", "aac",
-    "-b:a", "160k",
-    outpath,
   ];
+
+  if (options.audio_only) {
+    args = args.concat([
+      "-vn",  // No video
+      "-c:a", options.audio_encoder || "libmp3lame",
+      "-b:a", options.audio_bitrate || "192k",
+    ]);
+    // Change file extension to mp3 if audio_only is true
+    outpath = outpath.replace(/\.[^.]+$/, '.mp3');
+  } else {
+    args = args.concat([
+      "-c:v", options.encoder || "libx264",
+      "-b:v", options.bitrate || "3M",
+      "-c:a", "aac",
+      "-b:a", "160k",
+    ]);
+  }
+
+  args.push(outpath);
   await ffmpeg(args);
+  return outpath; 
 }
 
 async function mergeCuts(tempPath, filepaths, outpath) {
@@ -102,13 +117,13 @@ async function main() {
   for (const [i, cut] of cuts.entries()) {
     if (!("end" in cut)) continue;
     const duration = Number.parseFloat(cut.end) - Number.parseFloat(cut.start);
-    const cutName = `(cut${cuts.length === 1 ? "" : i + 1}) ${filename_noext} (${toHMS(cut.start)} - ${toHMS(cut.end)})${ext}`;
+    const cutName = `(cut${cuts.length === 1 ? "" : i + 1}) ${filename_noext} (${toHMS(cut.start)} - ${toHMS(cut.end)})${options.audio_only ? '.mp3' : ext}`;
     const outpath = path.join(outdir, cutName);
     console.log(`${green}(${i + 1}/${cuts.length})${plain} ${inpath} ${green}->${plain}`);
     console.log(`${outpath}\n`);
-    await renderCut(inpath, outpath, cut.start, duration);
+    const finalOutpath = await renderCut(inpath, outpath, cut.start, duration);
     // await transferTimestamps(inpath, outpath);
-    outpaths.push(outpath);
+    outpaths.push(finalOutpath);
   }
 
   if (outpaths.length > 1 && options.multi_cut_mode === "merge") {

@@ -32,7 +32,10 @@ local options = {
     multi_cut_mode = "separate",
     encoder = "libx264",
     bitrate = "3k",
+    audio_encoder = "libmp3lame",
+    audio_bitrate = "192k",
     config_path = config_path,
+    audio_only = false,
 }
 
 -- Returns a direct reference to the shared options table
@@ -54,6 +57,9 @@ function options_module.save_options()
         f:write("multi_cut_mode=" .. options.multi_cut_mode .. "\n")
         f:write("encoder=" .. options.encoder .. "\n")
         f:write("bitrate=" .. options.bitrate .. "\n")
+        f:write("audio_encoder=" .. options.audio_encoder .. "\n")
+        f:write("audio_bitrate=" .. options.audio_bitrate .. "\n")
+        f:write("audio_only=" .. tostring(options.audio_only) .. "\n")
         f:close()
         msg.info("Options saved to " .. conf_path)
     else
