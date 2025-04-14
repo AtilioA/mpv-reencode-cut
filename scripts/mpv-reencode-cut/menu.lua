@@ -8,6 +8,16 @@ local options_module = require "options"
 
 local options = options_module.get_options()
 
+-- Mapping between menu item names and options keys
+local menu_to_option_map = {
+    ["Audio only"] = "audio_only",
+    ["Audio encoder"] = "audio_encoder",
+    ["Video encoder"] = "encoder",
+    ["Audio bitrate"] = "audio_bitrate",
+    ["Video bitrate"] = "bitrate",
+    ["Multi-cut handling"] = "multi_cut_mode"
+}
+
 -- Helper functions
 local function table_contains(tbl, val)
     for _, v in ipairs(tbl) do
@@ -224,25 +234,20 @@ local function menu_adjust(delta)
     end
     item.value = choices[cur_index]
 
-    -- Update the shared options
-    if item.name == "Audio Only" then
-        options.audio_only = (item.value == "yes")
-        -- Rebuild menu items to reflect audio_only change
-        -- Save current selected index
-        local current_selected = menu_selected_index
-        build_menu_items()
-        -- Restore selected index, but ensure it's within bounds
-        menu_selected_index = math.min(current_selected, #menu_items)
-    elseif item.name == "Audio Encoder" then
-        options.audio_encoder = item.value
-    elseif item.name == "Video Encoder" then
-        options.encoder = item.value
-    elseif item.name == "Audio Bitrate" then
-        options.audio_bitrate = item.value
-    elseif item.name == "Video Bitrate" then
-        options.bitrate = item.value
-    elseif item.name == "Multi-cut handling" then
-        options.multi_cut_mode = item.value
+    -- Map menu item to option key and update the value
+    local option_key = menu_to_option_map[item.name]
+    if option_key then
+        if option_key == "audio_only" then
+            options[option_key] = (item.value == "yes")
+            -- Rebuild menu items to reflect audio_only change
+            -- Save current selected index
+            local current_selected = menu_selected_index
+            build_menu_items()
+            -- Restore selected index, but ensure it's within bounds
+            menu_selected_index = math.min(current_selected, #menu_items)
+        else
+            options[option_key] = item.value
+        end
     end
 
     update_menu_overlay()
@@ -264,14 +269,17 @@ local function close_menu()
     unbind_menu_keys()
     options_module.save_options()
 
+    -- Build a summary of the current configuration
     local current_encoder = options.audio_only and options.audio_encoder or options.encoder
     local current_bitrate = options.audio_only and options.audio_bitrate or options.bitrate
 
-    mp.msg.info("Configuration saved: " ..
+    local config_summary = "Configuration saved: " ..
         (options.audio_only and "Audio Encoder=" or "Video Encoder=") .. current_encoder ..
         ", " .. (options.audio_only and "Audio Bitrate=" or "Video Bitrate=") .. current_bitrate ..
         ", Multi-cut mode=" .. options.multi_cut_mode ..
-        ", Audio Only=" .. tostring(options.audio_only))
+        ", Audio Only=" .. (options.audio_only and "yes" or "no")
+
+    mp.msg.info(config_summary)
 end
 
 -- Accept selection and close menu

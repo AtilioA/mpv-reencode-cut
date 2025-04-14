@@ -7,19 +7,8 @@ local options_module = require "options"
 
 MAKE_CUTS_SCRIPT_PATH = mp.utils.join_path(mp.get_script_directory(), "make_cuts")
 
--- Initialize shared options
-local init_options = {
-    output_dir = ".",
-    multi_cut_mode = "separate",
-    encoder = "libx264",
-    bitrate = "3M",
-    audio_encoder = "libmp3lame",
-    audio_bitrate = "192k",
-    audio_only = false,
-}
-
-mp.options.read_options(init_options, "mpv-reencode-cut")
-options_module.init(init_options)
+-- Initialize options directly from the module
+options_module.init()
 menu.init()
 
 -- Get reference to shared options
