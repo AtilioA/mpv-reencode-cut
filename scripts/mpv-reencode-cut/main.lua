@@ -37,10 +37,12 @@ local function cut_key()
 end
 
 local function cut_set_start(start_time)
+    -- Check if we need to move to the next cut
     if cuts[cut_key()] ~= nil and cuts[cut_key()]["end"] then
         cut_index = cut_index + 1
     end
 
+    -- Initialize the cut if it doesn't exist
     if cuts[cut_key()] == nil then
         cuts[cut_key()] = {}
     end
@@ -82,7 +84,7 @@ local function cut_render()
     local indir = mp.utils.split_path(inpath)
 
     log("Rendering cuts...")
-    print("Rendering cut with options:", options_json)
+    mp.msg.info("Rendering with options: " .. options_json)
 
     local args = { "node", MAKE_CUTS_SCRIPT_PATH, indir, options_json, filename, cuts_json }
 
@@ -93,8 +95,17 @@ local function cut_render()
     }, function(result)
         if result == true then
             log("Successfully rendered cut for " .. filename)
+            mp.msg.info("Cut render complete")
+
+            -- Increment the cut_index to allow for new cuts without clearing previous ones
+            -- but only if the current cut has both start and end points
+            if cuts[cut_key()] and cuts[cut_key()]["start"] and cuts[cut_key()]["end"] then
+                cut_index = cut_index + 1
+                mp.msg.info("Incremented cut index to " .. cut_index)
+            end
         else
             log("Failed to render cuts. Verify your Node.js and FFmpeg installations.")
+            mp.msg.error("Cut render failed: " .. tostring(result))
         end
     end)
 end

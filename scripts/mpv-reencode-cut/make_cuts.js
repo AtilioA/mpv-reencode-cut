@@ -86,6 +86,10 @@ async function renderCut(inpath, outpath, start, duration) {
 }
 
 async function mergeCuts(tempPath, filepaths, outpath) {
+  console.log(`${green}Merging cuts:${plain}`);
+  console.log(`${green}Audio only:${plain} ${options.audio_only ? "yes" : "no"}`);
+  console.log(`${green}Files to merge:${plain}`, filepaths);
+
   const mergeFile = path.join(tempPath, "merging.txt");
   await fs.promises.writeFile(
     mergeFile,
@@ -94,9 +98,11 @@ async function mergeCuts(tempPath, filepaths, outpath) {
 
   // Create the final output path for the merged file with correct extension
   let finalOutputPath = path.join(path.dirname(outpath), `${path.basename(outpath)}`);
+
   // Change extension to .mp3 if audio_only is true
   if (options.audio_only) {
     finalOutputPath = finalOutputPath.replace(/\.[^.]+$/, '.mp3');
+    console.log(`${green}Using .mp3 extension for merged file:${plain} ${finalOutputPath}`);
   }
 
   // Concatenate the reencoded segments without reencoding
