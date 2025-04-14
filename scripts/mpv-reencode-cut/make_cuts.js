@@ -61,7 +61,7 @@ async function mergeCuts(tempPath, filepaths, outpath) {
     "-safe", "0",
     "-i", mergeFile,
     "-c", "copy",
-    outpath,
+    `merged_${outpath}`,
   ]);
 
   await fs.promises.unlink(mergeFile);
@@ -115,7 +115,9 @@ async function main() {
     const cutName = `(${outpaths.length} merged cuts) ${filename}`;
     const outpath = path.join(outdir, cutName);
     await mergeCuts(indir, outpaths, outpath);
-    // await transferTimestamps(inpath, outpath);
+
+    const nowSeconds = Date.now() / 1000;
+    fs.utimesSync(outpath, nowSeconds, nowSeconds);
   }
 
   console.log("Done.\n");
