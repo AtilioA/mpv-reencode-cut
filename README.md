@@ -7,8 +7,9 @@
 - **Multiple cuts per video**
 - **Optional merging** of cut segments into a single output (when multiple cuts are defined)
 - **Re-encoding**, enabling precise timing and customizable compression
+- **Audio-only mode** for creating audio clips without video
 - A built-in, in-player **OSD menu** (via `Ctrl + e`) to change settings on the fly such as:
-  - Video codec
+  - Video/audio codec
   - Bitrate
   - Multi-cut output mode
 
@@ -20,9 +21,10 @@ Perfect for sharing clips, creating highlights, or trimming videos quickly where
 
 - Easily set **start** and **end** times for multiple cuts with `g` and `h` keys.
 - Allows real-time adjustment of:
-  - **Video encoder** (auto-detected from `ffmpeg`)
+  - **Video/audio encoder** (auto-detected from `ffmpeg`)
   - **Bitrate** (selectable presets)
   - **Multi-cut mode** (`separate` or `merge`)
+  - **Audio-only mode** for extracting audio without video
 - Saves your preferences for future sessions.
 - User-friendly **OSD configuration menu** built into mpv.
 
@@ -77,11 +79,13 @@ Ctrl + e
 
 Use arrow keys to change settings:
 
-- `↑ / ↓`: navigate between encoder, bitrate, and multi-cut mode options
+- `↑ / ↓`: navigate between options including encoder, bitrate, audio-only mode, and multi-cut mode
 - `← / →`: change the current option's value
 - `Enter / Esc`: save and exit
 
-Encoders are dynamically listed based on your ffmpeg build output, and default to `libx264`.
+Encoders are dynamically listed based on your ffmpeg build output. Audio and video encoders default to `libmp3lame` and `libx264` respectively.
+
+When in audio-only mode, the menu options will change to reflect audio-specific settings. Output files will be saved with .mp3 extension in this mode.
 
 All changes are persisted to your `script-opts` config (`mpv-reencode-cut.conf`) file.
 
