@@ -92,8 +92,12 @@ async function mergeCuts(tempPath, filepaths, outpath) {
     filepaths.map((filepath) => `file '${ffmpegEscapeFilepath(filepath)}'`).join("\n")
   );
 
-  // Create the final output path for the merged file
-  const finalOutputPath = path.join(path.dirname(outpath), `${path.basename(outpath)}`);
+  // Create the final output path for the merged file with correct extension
+  let finalOutputPath = path.join(path.dirname(outpath), `${path.basename(outpath)}`);
+  // Change extension to .mp3 if audio_only is true
+  if (options.audio_only) {
+    finalOutputPath = finalOutputPath.replace(/\.[^.]+$/, '.mp3');
+  }
 
   // Concatenate the reencoded segments without reencoding
   await ffmpeg([
@@ -144,7 +148,8 @@ async function main() {
   }
 
   if (outpaths.length > 1 && options.multi_cut_mode === "merge") {
-    const cutName = `(${outpaths.length} merged cuts) ${filename}`;
+    const extension = options.audio_only ? '.mp3' : ext;
+    const cutName = `(${outpaths.length} merged cuts) ${filename_noext}${extension}`;
     const outpath = path.join(outdir, cutName);
     console.log(`\nMerging ${outpaths.length} cuts into a single file...`);
     const mergedPath = await mergeCuts(indir, outpaths, outpath);
