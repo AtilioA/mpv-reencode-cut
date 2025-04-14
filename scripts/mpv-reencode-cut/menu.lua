@@ -141,7 +141,7 @@ local function build_menu_items()
         return sort_encoders_by_popularity(encoders, popular_audio_encoders)
     end
 
-    -- Add "Audio Only" option first
+    -- Add "Audio only" option first
     table.insert(menu_items, {
         name = "Audio only",
         value = options.audio_only and "yes" or "no",
@@ -162,14 +162,14 @@ local function build_menu_items()
 
     -- Add encoder option
     table.insert(menu_items, {
-        name = options.audio_only and "Audio Encoder" or "Video Encoder",
+        name = options.audio_only and "Audio encoder" or "Video encoder",
         value = options.audio_only and options.audio_encoder or options.encoder,
         choices = available_encoders
     })
 
     -- Add bitrate option
     table.insert(menu_items, {
-        name = options.audio_only and "Audio Bitrate" or "Video Bitrate",
+        name = options.audio_only and "Audio bitrate" or "Video bitrate",
         value = options.audio_only and options.audio_bitrate or options.bitrate,
         choices = bitrate_options
     })
@@ -274,10 +274,10 @@ local function close_menu()
     local current_bitrate = options.audio_only and options.audio_bitrate or options.bitrate
 
     local config_summary = "Configuration saved: " ..
-        (options.audio_only and "Audio Encoder=" or "Video Encoder=") .. current_encoder ..
-        ", " .. (options.audio_only and "Audio Bitrate=" or "Video Bitrate=") .. current_bitrate ..
+        (options.audio_only and "Audio encoder=" or "Video encoder=") .. current_encoder ..
+        ", " .. (options.audio_only and "Audio bitrate=" or "Video bitrate=") .. current_bitrate ..
         ", Multi-cut mode=" .. options.multi_cut_mode ..
-        ", Audio Only=" .. (options.audio_only and "yes" or "no")
+        ", Audio only=" .. (options.audio_only and "yes" or "no")
 
     mp.msg.info(config_summary)
 end
