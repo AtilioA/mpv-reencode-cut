@@ -34,6 +34,24 @@ async function ffmpeg(args) {
   child_process.spawnSync(cmd, fullArgs, { stdio: "inherit" });
 }
 
+async function transferTimestamps(inPath, outPath, useCurrentTime = false) {
+  try {
+    if (useCurrentTime) {
+      // Use current time
+      const now = Date.now() / 1000;
+      fs.utimesSync(outPath, now, now);
+      console.log(`Set current timestamp on ${path.basename(outPath)}`);
+    } else {
+      // Transfer from source
+      const { atime, mtime } = fs.statSync(inPath);
+      fs.utimesSync(outPath, atime.getTime() / 1000, mtime.getTime() / 1000);
+      console.log(`Transferred timestamps from source to ${path.basename(outPath)}`);
+    }
+  } catch (err) {
+    console.error(`${red}Failed to set file timestamps:${plain}`, err);
+  }
+}
+
 async function renderCut(inpath, outpath, start, duration) {
   let args = [
     "-ss", start,
@@ -60,7 +78,11 @@ async function renderCut(inpath, outpath, start, duration) {
 
   args.push(outpath);
   await ffmpeg(args);
-  return outpath; 
+
+  // Transfer timestamps from source file
+  await transferTimestamps(inpath, outpath);
+
+  return outpath;
 }
 
 async function mergeCuts(tempPath, filepaths, outpath) {
@@ -70,32 +92,28 @@ async function mergeCuts(tempPath, filepaths, outpath) {
     filepaths.map((filepath) => `file '${ffmpegEscapeFilepath(filepath)}'`).join("\n")
   );
 
-  // Concatenate the reencoded segments without reencoding into a temporary file.
+  // Create the final output path for the merged file
+  const finalOutputPath = path.join(path.dirname(outpath), `${path.basename(outpath)}`);
+
+  // Concatenate the reencoded segments without reencoding
   await ffmpeg([
     "-f", "concat",
     "-safe", "0",
     "-i", mergeFile,
     "-c", "copy",
-    `merged_${outpath}`,
+    finalOutputPath,
   ]);
 
+  // Set current timestamp on the merged file
+  await transferTimestamps(null, finalOutputPath, true);
+
+  // Clean up temporary files
   await fs.promises.unlink(mergeFile);
   for (const filepath of filepaths) {
     await fs.promises.unlink(filepath);
   }
-}
 
-async function transferTimestamps(inPath, outPath, offset = 0) {
-  try {
-    const { atime, mtime } = fs.statSync(inPath);
-    fs.utimesSync(
-      outPath,
-      atime.getTime() / 1000 + offset,
-      mtime.getTime() / 1000 + offset
-    );
-  } catch (err) {
-    console.error("Failed to set output file modified time", err);
-  }
+  return finalOutputPath;
 }
 
 async function main() {
@@ -122,17 +140,15 @@ async function main() {
     console.log(`${green}(${i + 1}/${cuts.length})${plain} ${inpath} ${green}->${plain}`);
     console.log(`${outpath}\n`);
     const finalOutpath = await renderCut(inpath, outpath, cut.start, duration);
-    // await transferTimestamps(inpath, outpath);
     outpaths.push(finalOutpath);
   }
 
   if (outpaths.length > 1 && options.multi_cut_mode === "merge") {
     const cutName = `(${outpaths.length} merged cuts) ${filename}`;
     const outpath = path.join(outdir, cutName);
-    await mergeCuts(indir, outpaths, outpath);
-
-    const nowSeconds = Date.now() / 1000;
-    fs.utimesSync(outpath, nowSeconds, nowSeconds);
+    console.log(`\nMerging ${outpaths.length} cuts into a single file...`);
+    const mergedPath = await mergeCuts(indir, outpaths, outpath);
+    console.log(`${green}Merged file created:${plain} ${mergedPath}`);
   }
 
   console.log("Done.\n");
