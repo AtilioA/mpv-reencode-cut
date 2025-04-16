@@ -302,12 +302,6 @@ async function mergeCuts(tempPath, filepaths, outpath) {
 async function cleanupTempFiles(streamData) {
   if (!streamData) return;
 
-  // If user wants to keep downloads, don't clean up
-  if (options.stream_keep_downloads) {
-    console.log(`${green}Keeping downloaded stream files${plain}`);
-    return;
-  }
-
   if (streamData.isLocalFile && streamData.path) {
     try {
       // Clean up the main file
