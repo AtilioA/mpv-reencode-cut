@@ -5,7 +5,10 @@ mp.options = require "mp.options"
 local menu = require "menu"
 local options_module = require "options"
 
-MAKE_CUTS_SCRIPT_PATH = mp.utils.join_path(mp.get_script_directory(), "dist", "make_cuts.js")
+-- Script paths
+local SCRIPT_DIR = mp.get_script_directory()
+DIST_PATH = mp.utils.join_path(SCRIPT_DIR, "dist")
+MAKE_CUTS_SCRIPT_PATH = mp.utils.join_path(DIST_PATH, "make_cuts.js")
 
 -- Initialize options directly from the module
 options_module.init()
