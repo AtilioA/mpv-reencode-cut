@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "commonjs",
+        "outDir": "./scripts/mpv-reencode-cut/dist",
+        "rootDir": "./scripts/mpv-reencode-cut/src/ts",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "types": [
+            "node"
+        ],
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true
+    },
+    "include": [
+        "scripts/mpv-reencode-cut/src/ts/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

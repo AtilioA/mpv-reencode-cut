@@ -2,12 +2,17 @@
     "name": "mpv-reencode-cut",
     "version": "1.0.0",
     "description": "MPV script for cutting and re-encoding videos",
-    "main": "dist/make_cuts.js",
+    "main": "scripts/mpv-reencode-cut/dist/make_cuts.js",
     "scripts": {
         "build": "tsc",
         "watch": "tsc -w",
-        "clean": "rimraf dist",
-        "prebuild": "npm run clean"
+        "clean": "rimraf scripts/mpv-reencode-cut/dist",
+        "prebuild": "npm run clean",
+        "dev": "tsc -w",
+        "predeploy:win": "if exist \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\\dist\" rmdir /S /Q \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\\dist\"",
+        "deploy:win": "xcopy /Y scripts\\mpv-reencode-cut\\*.lua \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\\\" && xcopy /Y /S /I scripts\\mpv-reencode-cut\\dist \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\\dist\"",
+        "deploy:unix": "rsync -av --delete --exclude 'src/' --exclude 'node_modules/' scripts/mpv-reencode-cut/ ~/.config/mpv/scripts/mpv-reencode-cut/",
+        "deploy": "npm run build && npm run deploy:win"
     },
     "author": "",
     "license": "MIT",
