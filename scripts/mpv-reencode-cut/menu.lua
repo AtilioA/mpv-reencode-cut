@@ -15,7 +15,10 @@ local menu_to_option_map = {
     ["Video encoder"] = "encoder",
     ["Audio bitrate"] = "audio_bitrate",
     ["Video bitrate"] = "bitrate",
-    ["Multi-cut handling"] = "multi_cut_mode"
+    ["Multi-cut handling"] = "multi_cut_mode",
+    ["Stream output dir"] = "stream_output_dir",
+    ["Stream prefer full download"] = "stream_prefer_full_download",
+    ["Stream keep downloads"] = "stream_keep_downloads"
 }
 
 -- Helper functions
@@ -179,6 +182,25 @@ local function build_menu_items()
         name = "Multi-cut handling",
         value = options.multi_cut_mode,
         choices = { "separate", "merge" }
+    })
+
+    -- Add streaming options
+    table.insert(menu_items, {
+        name = "Stream output dir",
+        value = options.stream_output_dir,
+        choices = { "stream_cuts", ".", "~/Videos", "videos", "Downloads" }
+    })
+
+    table.insert(menu_items, {
+        name = "Stream prefer full download",
+        value = options.stream_prefer_full_download and "yes" or "no",
+        choices = { "no", "yes" }
+    })
+
+    table.insert(menu_items, {
+        name = "Stream keep downloads",
+        value = options.stream_keep_downloads and "yes" or "no",
+        choices = { "no", "yes" }
     })
 end
 

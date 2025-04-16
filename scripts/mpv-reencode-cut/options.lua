@@ -45,6 +45,30 @@ local option_types = {
             end
             return val == "yes" or val == "true" or val == "1"
         end
+    },
+    -- Streaming options
+    stream_output_dir = { type = "string" },
+    stream_prefer_full_download = {
+        type = "boolean",
+        mpv_type = "string",
+        to_string = function(val) return val and "1" or "0" end,
+        from_string = function(val)
+            if type(val) == "boolean" then
+                return val
+            end
+            return val == "yes" or val == "true" or val == "1"
+        end
+    },
+    stream_keep_downloads = {
+        type = "boolean",
+        mpv_type = "string",
+        to_string = function(val) return val and "1" or "0" end,
+        from_string = function(val)
+            if type(val) == "boolean" then
+                return val
+            end
+            return val == "yes" or val == "true" or val == "1"
+        end
     }
 }
 
@@ -58,6 +82,10 @@ local options = {
     audio_bitrate = "192k",
     config_path = config_path,
     audio_only = false,
+    -- Streaming defaults
+    stream_output_dir = "stream_cuts",
+    stream_prefer_full_download = false,
+    stream_keep_downloads = false,
 }
 
 -- Validate option against its type definition

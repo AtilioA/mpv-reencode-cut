@@ -71,6 +71,35 @@ local function cut_clear()
     end
 end
 
+-- Check if the current media is a stream rather than a local file
+local function is_stream()
+    local path = mp.get_property("path")
+    -- Check if it's an HTTP/HTTPS URL or something loaded through ytdl
+    return path and (path:match("^https?://") or path:match("^ytdl://"))
+end
+
+-- Get streaming info from mpv
+local function get_stream_info()
+    local stream_info = {}
+    stream_info.path = mp.get_property("path")
+    stream_info.media_title = mp.get_property("media-title", "")
+    stream_info.ytdl_format = mp.get_property("ytdl-format", "")
+    stream_info.file_format = mp.get_property("file-format", "")
+    stream_info.duration = mp.get_property_number("duration", 0)
+
+    -- Try to get the direct media URL if available
+    stream_info.direct_url = mp.get_property("stream-path", stream_info.path)
+
+    return stream_info
+end
+
+-- Sanitize string for use as filename
+local function sanitize_filename(str)
+    -- Replace invalid filename characters with underscores
+    local sanitized = str:gsub("[\\/*:?\"<>|]", "_")
+    return sanitized
+end
+
 local function cut_render()
     if cuts[cut_key()] == nil or cuts[cut_key()]["end"] == nil then
         log("No cuts to render")
@@ -81,18 +110,63 @@ local function cut_render()
     local options_json = mp.utils.format_json(options)
     local inpath = mp.get_property("path")
     local filename = mp.get_property("filename")
-    local indir = mp.utils.split_path(inpath)
+    local indir
+    local is_streaming = is_stream()
+    local stream_info = {}
+    local original_output_dir = nil
+
+    if is_streaming then
+        -- Handle streaming content
+        log("Processing streaming content...")
+        stream_info = get_stream_info()
+
+        -- Use the media title as the filename if available
+        if stream_info.media_title and stream_info.media_title ~= "" then
+            filename = sanitize_filename(stream_info.media_title) .. ".mp4"
+        end
+
+        -- Get the user's home directory for output (or use temp)
+        local home = os.getenv("HOME") or os.getenv("USERPROFILE") or os.getenv("TEMP")
+        indir = home
+
+        -- Remember original output_dir
+        original_output_dir = options["output_dir"]
+
+        -- Use stream-specific output directory if set
+        if options["stream_output_dir"] and options["stream_output_dir"] ~= "" then
+            options["output_dir"] = options["stream_output_dir"]
+            log("Using stream output directory: " .. options["stream_output_dir"])
+        end
+
+        -- Update options_json with the modified options
+        options_json = mp.utils.format_json(options)
+    else
+        -- Regular local file
+        indir = mp.utils.split_path(inpath)
+    end
 
     log("Rendering cuts...")
     mp.msg.info("Rendering with options: " .. options_json)
 
+    -- Add stream info to the arguments if streaming
     local args = { "node", MAKE_CUTS_SCRIPT_PATH, indir, options_json, filename, cuts_json }
+
+    if is_streaming then
+        local stream_info_json = mp.utils.format_json(stream_info)
+        table.insert(args, stream_info_json)
+        log("Stream detected - using direct streaming mode")
+    end
 
     mp.command_native_async({
         name = "subprocess",
         playback_only = false,
         args = args,
     }, function(result)
+        -- Restore original output_dir if it was changed for streaming
+        if is_streaming and original_output_dir then
+            options["output_dir"] = original_output_dir
+        end
+
         if result == true then
             log("Successfully rendered cut for " .. filename)
             mp.msg.info("Cut render complete")
