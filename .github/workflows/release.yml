@@ -14,12 +14,39 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
       - name: Install zip
         run: sudo apt-get install -y zip
 
       - name: Create archive
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: zip -r mpv-reencode-cut.zip scripts script-opts
+        run: |
+          mkdir -p release/scripts/mpv-reencode-cut
+          mkdir -p release/script-opts
+
+          # Copy Lua files
+          cp scripts/mpv-reencode-cut/*.lua release/scripts/mpv-reencode-cut/
+
+          # Copy dist directory with compiled JS
+          cp -r scripts/mpv-reencode-cut/dist release/scripts/mpv-reencode-cut/
+
+          # Copy script-opts
+          cp -r script-opts/* release/script-opts/ || true
+
+          # Create the final zip
+          cd release
+          zip -r ../mpv-reencode-cut.zip scripts script-opts
 
       - name: Release
         uses: softprops/action-gh-release@v1
