@@ -39,3 +39,6 @@ luac.out
 *.x86_64
 *.hex
 
+
+scripts/mpv-reencode-cut/dist
+scripts/mpv-reencode-cut/node_modules
