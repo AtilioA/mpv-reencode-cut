@@ -8,6 +8,8 @@
 - **Optional merging** of cut segments into a single output (when multiple cuts are defined)
 - **Re-encoding**, enabling precise timing and customizable compression
 - **Audio-only mode** for creating audio clips without video
+- **Streaming support**: cut and re-encode from online sources (YouTube, etc.)
+
 - A built-in, in-player **OSD menu** (via `Ctrl + e`) to change settings on the fly such as:
   - Video/audio codec
   - Bitrate
@@ -27,6 +29,7 @@ Perfect for sharing clips, creating highlights, or trimming videos quickly where
   - **Audio-only mode** for extracting audio without video
 - Saves your preferences for future sessions.
 - User-friendly **OSD configuration menu** built into mpv.
+- **Streaming support**: Cut from online sources (YouTube, etc.) with options for output directory and download mode (partial or full).
 
 ---
 
@@ -46,7 +49,7 @@ Perfect for sharing clips, creating highlights, or trimming videos quickly where
 mpv/portable_config/
 ```
 
-3. Ensure [`node`](https://nodejs.org/) and [`ffmpeg`](https://www.ffmpeg.org/download.html) are available in your system `PATH`.
+1. Ensure [`node`](https://nodejs.org/), [`ffmpeg`](https://www.ffmpeg.org/download.html), and (for streaming support) [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) are available in your system `PATH`.
 
 ---
 
@@ -65,7 +68,7 @@ Open a video in mpv and use the following keybindings:
 | `Ctrl + h` | Clear all cuts                |
 | `Ctrl + e` | Open configuration menu       |
 
-Rendered files are saved to the `output_dir` (default is the same as the input file's directory). Output filenames include cut indices and timestamps.
+Rendered files are saved to the `output_dir` (default is the same as the input file's directory). Output filenames include cut indices and timestamps. For streaming sources, the output directory can be set separately and partial or full downloads are supported.
 
 ---
 
@@ -79,7 +82,7 @@ Ctrl + e
 
 Use arrow keys to change settings:
 
-- `↑ / ↓`: navigate between options including encoder, bitrate, audio-only mode, and multi-cut mode
+- `↑ / ↓`: navigate between options including encoder, bitrate, audio-only mode, multi-cut mode, etc.
 - `← / →`: change the current option's value
 - `Enter / Esc`: save and exit
 
