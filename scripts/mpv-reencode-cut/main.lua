@@ -25,6 +25,34 @@ local function log(...)
     mp.osd_message(...)
 end
 
+-- Function to update chapters based on current cuts
+local function update_chapters()
+    local chapters = {}
+    local chapter_index = 1
+
+    for i = 0, cut_index do
+        local cut = cuts[tostring(i)]
+        if cut then
+            if cut.start then
+                chapters[chapter_index] = {
+                    title = string.format("Cut %d Start", i + 1),
+                    time = cut.start
+                }
+                chapter_index = chapter_index + 1
+            end
+            if cut.end_time then
+                chapters[chapter_index] = {
+                    title = string.format("Cut %d End", i + 1),
+                    time = cut.end_time
+                }
+                chapter_index = chapter_index + 1
+            end
+        end
+    end
+
+    mp.set_property_native("chapter-list", chapters)
+end
+
 local function cut_toggle_mode()
     if options["multi_cut_mode"] == "separate" then
         options["multi_cut_mode"] = "merge"
@@ -41,7 +69,7 @@ end
 
 local function cut_set_start(start_time)
     -- Check if we need to move to the next cut
-    if cuts[cut_key()] ~= nil and cuts[cut_key()]["end"] then
+    if cuts[cut_key()] ~= nil and cuts[cut_key()]["end_time"] then
         cut_index = cut_index + 1
     end
 
@@ -52,6 +80,8 @@ local function cut_set_start(start_time)
 
     cuts[cut_key()]["start"] = start_time
     log(string.format("[cut %d] Set start time: %.2fs", cut_index + 1, start_time))
+
+    update_chapters()
 end
 
 local function cut_set_end(end_time)
@@ -60,14 +90,17 @@ local function cut_set_end(end_time)
         return
     end
 
-    cuts[cut_key()]["end"] = end_time
+    cuts[cut_key()]["end_time"] = end_time
     log(string.format("[cut %d] Set end time: %.2fs", cut_index + 1, end_time))
+
+    update_chapters()
 end
 
 local function cut_clear()
     if next(cuts) then
         cuts = {}
         cut_index = 0
+        mp.set_property_native("chapter-list", {})
         log("Cuts cleared")
     else
         log("No cuts to clear")
@@ -104,7 +137,7 @@ local function sanitize_filename(str)
 end
 
 local function cut_render()
-    if cuts[cut_key()] == nil or cuts[cut_key()]["end"] == nil then
+    if cuts[cut_key()] == nil or cuts[cut_key()]["end_time"] == nil then
         log("No cuts to render")
         return
     end
@@ -176,7 +209,7 @@ local function cut_render()
 
             -- Increment the cut_index to allow for new cuts without clearing previous ones
             -- but only if the current cut has both start and end points
-            if cuts[cut_key()] and cuts[cut_key()]["start"] and cuts[cut_key()]["end"] then
+            if cuts[cut_key()] and cuts[cut_key()]["start"] and cuts[cut_key()]["end_time"] then
                 cut_index = cut_index + 1
                 mp.msg.info("Incremented cut index to " .. cut_index)
             end
