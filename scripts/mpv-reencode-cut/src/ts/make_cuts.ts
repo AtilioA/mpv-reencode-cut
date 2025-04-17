@@ -2,7 +2,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { StreamInfo, Options, Cut, StreamData } from './types';
-import { ensureDirectoryExists, isSubdirectory, cleanupFiles, setFileTimestamps } from './utils/filesystem';
+import { ensureDirectoryExists, isSubdirectory, cleanupFiles, setFileTimestamps, rotateTempFiles } from './utils/filesystem';
 import { buildFFmpegArgs, runFFmpeg, buildMergeArgs } from './utils/ffmpeg';
 import { handleStreamDownload } from './utils/stream';
 
@@ -163,6 +163,9 @@ async function main() {
         if (streamData?.isLocalFile && streamData.path) {
             const baseFileName = path.basename(streamData.path).split('.')[0];
             cleanupFiles(tempStreamDir, baseFileName);
+
+            // Rotate temp files after successful render
+            rotateTempFiles(tempStreamDir);
         }
 
         console.log('Done.\n');
@@ -173,6 +176,9 @@ async function main() {
         if (streamData?.isLocalFile && streamData.path) {
             const baseFileName = path.basename(streamData.path).split('.')[0];
             cleanupFiles(tempStreamDir, baseFileName);
+
+            // Still rotate temp files even on error
+            rotateTempFiles(tempStreamDir);
         }
 
         process.exit(1);

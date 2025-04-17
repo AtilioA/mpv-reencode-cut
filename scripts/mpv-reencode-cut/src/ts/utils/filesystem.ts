@@ -65,3 +65,71 @@ export function setFileTimestamps(inPath: string | null, outPath: string, useCur
         console.error('Failed to set file timestamps:', err);
     }
 }
+
+interface TempFileInfo {
+    path: string;
+    size: number;
+    mtime: number;
+}
+
+const MAX_TEMP_SIZE_BYTES = 10 * 1024 * 1024 * 1024; // 10GB
+const MAX_TEMP_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+export function rotateTempFiles(tempDir: string): void {
+    if (!fs.existsSync(tempDir)) return;
+
+    // Get all files with their sizes and modification times
+    const files: TempFileInfo[] = fs.readdirSync(tempDir)
+        .map(file => {
+            const filePath = path.join(tempDir, file);
+            try {
+                const stats = fs.statSync(filePath);
+                return {
+                    path: filePath,
+                    size: stats.size,
+                    mtime: stats.mtimeMs
+                };
+            } catch (err) {
+                console.error(`Error getting stats for ${filePath}:`, err);
+                return null;
+            }
+        })
+        .filter((file): file is TempFileInfo => file !== null);
+
+    const now = Date.now();
+
+    // First pass: Delete files older than 24 hours
+    for (const file of files) {
+        const age = now - file.mtime;
+        if (age > MAX_TEMP_AGE_MS) {
+            try {
+                fs.unlinkSync(file.path);
+                console.log(`Deleted old temp file ${path.basename(file.path)} (Age: ${Math.round(age / 3600000)}h)`);
+            } catch (err) {
+                console.error(`Error deleting ${file.path}:`, err);
+            }
+        }
+    }
+
+    // Second pass: Check total size and remove oldest files if over limit
+    const remainingFiles = files.filter(file => fs.existsSync(file.path));
+    const totalSize = remainingFiles.reduce((sum, file) => sum + file.size, 0);
+
+    if (totalSize > MAX_TEMP_SIZE_BYTES) {
+        // Sort by modification time (oldest first)
+        remainingFiles.sort((a, b) => a.mtime - b.mtime);
+
+        let currentSize = totalSize;
+        for (const file of remainingFiles) {
+            if (currentSize <= MAX_TEMP_SIZE_BYTES) break;
+
+            try {
+                fs.unlinkSync(file.path);
+                currentSize -= file.size;
+                console.log(`Deleted temp file due to space limit ${path.basename(file.path)} (Size: ${Math.round(file.size / 1024 / 1024)}MB)`);
+            } catch (err) {
+                console.error(`Error deleting ${file.path}:`, err);
+            }
+        }
+    }
+}
