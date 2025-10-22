@@ -22,15 +22,26 @@ export function buildFFmpegArgs(
     if (options.audio_only) {
         outputArgs = outputArgs.concat([
             '-vn',
-            '-c:a', options.audio_codec || 'libmp3lame',
-            '-b:a', options.audio_bitrate || '192k'
+            '-c:a', options.audio_codec || 'aac',
+            '-b:a', options.audio_bitrate || '160k',
+            '-ac', '2'  // stereo mixdown
         ]);
     } else {
         outputArgs = outputArgs.concat([
-            '-c:v', options.video_codec || 'libx264',
-            '-b:v', options.video_bitrate || '3M',
+            // Video settings matching Telegram preset
+            '-c:v', options.video_codec || 'h264_nvenc',  // NVENC H.264 (fallback to H.265 if available)
+            '-preset', options.video_preset || 'medium',
+            '-b:v', options.video_bitrate || '4000k',  // 4M bitrate
+            '-r', options.video_framerate || '60',  // 60 fps
+            '-crf', options.video_crf || '22',  // Quality setting
+            '-pix_fmt', 'yuv420p',  // Ensure compatibility
+            '-vf', Array.isArray(options.video_filters) ? options.video_filters.join(',') : (options.video_filters || 'scale=1920:1080'),  // 1080p resolution
+            '-aspect', '16:9',  // Maintain aspect ratio
+            // Audio settings matching Telegram preset
             '-c:a', 'aac',
-            '-b:a', '160k'
+            '-b:a', '160k',
+            '-ac', '2',  // stereo mixdown
+            '-ar', '48000'  // 48kHz sample rate
         ]);
     }
 

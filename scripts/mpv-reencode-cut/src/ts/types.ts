@@ -34,6 +34,12 @@ export interface Options {
     audio_encoder?: string;
     encoder?: string;
     bitrate?: string;
+    // Telegram preset specific options
+    video_preset?: string;
+    video_framerate?: string;
+    video_crf?: string;
+    video_resolution?: string;
+    video_aspect_ratio?: string;
 }
 
 export interface StreamData {
