@@ -44,3 +44,4 @@ scripts/mpv-reencode-cut/dist
 scripts/mpv-reencode-cut/node_modules
 dist
 node_modules
+release/

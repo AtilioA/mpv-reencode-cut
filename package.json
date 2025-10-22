@@ -9,15 +9,17 @@
         "clean": "rimraf scripts/mpv-reencode-cut/dist",
         "prebuild": "npm run clean",
         "dev": "tsc -w",
-        "predeploy:win": "if exist \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\\dist\" rmdir /S /Q \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\\dist\"",
-        "deploy:win": "xcopy /Y scripts\\mpv-reencode-cut\\*.lua \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\\\" && xcopy /Y /S /I scripts\\mpv-reencode-cut\\dist \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\\dist\"",
-        "deploy:unix": "rsync -av --delete --exclude 'src/' --exclude 'node_modules/' scripts/mpv-reencode-cut/ ~/.config/mpv/scripts/mpv-reencode-cut/",
-        "deploy": "npm run build && npm run deploy:win"
+        "predeploy:win": "if exist \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\" rmdir /S /Q \"%APPDATA%\\mpv\\scripts\\mpv-reencode-cut\"",
+        "deploy:win": "node scripts/package-release.js \"%APPDATA%\\mpv\"",
+        "deploy:unix": "node scripts/package-release.js \"$HOME/.config/mpv\"",
+        "deploy": "npm run prebuild && npm run build && npm run predeploy:win && npm run deploy:win",
+        "package": "node scripts/package-release.js"
     },
     "author": "",
     "license": "MIT",
     "devDependencies": {
         "@types/node": "^20.0.0",
+        "archiver": "^6.0.1",
         "rimraf": "^5.0.0",
         "typescript": "^5.0.0"
     }
