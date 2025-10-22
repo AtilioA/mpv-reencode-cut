@@ -91,6 +91,7 @@ local function cut_set_end(end_time)
     end
 
     cuts[cut_key()]["end_time"] = end_time
+    cuts[cut_key()]["end"] = end_time
     log(string.format("[cut %d] Set end time: %.2fs", cut_index + 1, end_time))
 
     update_chapters()
