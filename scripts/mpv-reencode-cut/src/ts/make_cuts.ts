@@ -42,8 +42,10 @@ async function renderCut(
     start: number,
     duration: number
 ): Promise<string> {
+    const isRemoteSource = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(inpath);
+
     // Check if input file exists when it's a local file
-    if (inpath.startsWith('/') || inpath.includes(':\\') || inpath.includes(':/')) {
+    if (!isRemoteSource) {
         if (!fs.existsSync(inpath)) {
             throw new Error(`Input file not found: ${inpath}`);
         }
