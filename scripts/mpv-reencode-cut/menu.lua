@@ -11,10 +11,6 @@ local options = options_module.get_options()
 -- Mapping between menu item names and options keys
 local menu_to_option_map = {
     ["Audio only"] = "audio_only",
-    ["Audio encoder"] = "audio_encoder",
-    ["Video encoder"] = "encoder",
-    ["Audio bitrate"] = "audio_bitrate",
-    ["Video bitrate"] = "bitrate",
     ["Multi-cut handling"] = "multi_cut_mode",
     ["Stream output dir"] = "stream_output_dir",
     ["Stream prefer full download"] = "stream_prefer_full_download",
@@ -82,66 +78,7 @@ local function build_menu_items()
     menu_items = {}
     local options = options_module.get_options()
 
-    -- Get available video encoders from ffmpeg output
-    local function get_available_video_encoders()
-        local encoders = {}
-        local res = mp.utils.subprocess({ args = { "ffmpeg", "-encoders" }, capture_stdout = true, capture_stderr = true })
-        if res.status ~= 0 and res.killed_by_us == false then
-            mp.msg.warn("Could not run ffmpeg -encoders; using default encoder.")
-            mp.osd_message(
-                "Could not run ffmpeg -encoders; using default encoders.\nPlease check your ffmpeg installation.", 5)
-            -- Fallback to default encoders
-            return { "libx264", "libx265" }
-        end
-        for line in res.stdout:gmatch("[^\r\n]+") do
-            -- Look for lines beginning with a space and a 'V' flag (video encoder)
-            -- Example line: " V..... libx264             H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"
-            if line:match("^%s*V") then
-                local enc = line:match("V[%p%w]*%s+(%S+)")
-                if enc and not table_contains(encoders, enc) then
-                    table.insert(encoders, enc)
-                end
-            end
-        end
-        if #encoders == 0 then
-            encoders = { "libx264", "libx265" }
-        end
 
-        -- Popular video encoders to prioritize
-        local popular_video_encoders = { "libx264", "libx265", "h264_nvenc", "hevc_nvenc", "h264_amf", "hevc_amf",
-            "libaom-av1" }
-        return sort_encoders_by_popularity(encoders, popular_video_encoders)
-    end
-
-    -- Get available audio encoders from ffmpeg output
-    local function get_available_audio_encoders()
-        local encoders = {}
-        local res = mp.utils.subprocess({ args = { "ffmpeg", "-encoders" }, capture_stdout = true, capture_stderr = true })
-        if res.status ~= 0 and res.killed_by_us == false then
-            mp.msg.warn("Could not run ffmpeg -encoders; using default encoder.")
-            mp.osd_message(
-                "Could not run ffmpeg -encoders; using default encoders.\nPlease check your ffmpeg installation.", 5)
-            -- Fallback to default encoders
-            return { "libmp3lame", "aac" }
-        end
-        for line in res.stdout:gmatch("[^\r\n]+") do
-            -- Look for lines beginning with a space and an 'A' flag (audio encoder)
-            -- Example line: " A..... libmp3lame           MP3 (MPEG audio layer 3)"
-            if line:match("^%s*A") then
-                local enc = line:match("A[%p%w]*%s+(%S+)")
-                if enc and not table_contains(encoders, enc) then
-                    table.insert(encoders, enc)
-                end
-            end
-        end
-        if #encoders == 0 then
-            encoders = { "libmp3lame", "aac" }
-        end
-
-        -- Popular audio encoders to prioritize
-        local popular_audio_encoders = { "libmp3lame", "aac", "libvorbis", "libopus", "flac" }
-        return sort_encoders_by_popularity(encoders, popular_audio_encoders)
-    end
 
     -- Add "Audio only" option first
     table.insert(menu_items, {
@@ -150,31 +87,7 @@ local function build_menu_items()
         choices = { "no", "yes" }
     })
 
-    -- Get encoders based on audio_only mode
-    local available_encoders
-    local bitrate_options
 
-    if options.audio_only then
-        available_encoders = get_available_audio_encoders()
-        bitrate_options = { "64k", "128k", "192k", "256k", "320k" }
-    else
-        available_encoders = get_available_video_encoders()
-        bitrate_options = { "500k", "1M", "2M", "3M", "5M", "10M" }
-    end
-
-    -- Add encoder option
-    table.insert(menu_items, {
-        name = options.audio_only and "Audio encoder" or "Video encoder",
-        value = options.audio_only and options.audio_encoder or options.encoder,
-        choices = available_encoders
-    })
-
-    -- Add bitrate option
-    table.insert(menu_items, {
-        name = options.audio_only and "Audio bitrate" or "Video bitrate",
-        value = options.audio_only and options.audio_bitrate or options.bitrate,
-        choices = bitrate_options
-    })
 
     -- Add multi-cut option at the end
     table.insert(menu_items, {

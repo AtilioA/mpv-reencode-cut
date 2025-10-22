@@ -8,12 +8,15 @@ local msg = require "mp.msg"
 local function get_config_file_path(identifier)
     identifier = identifier or mp.get_script_name() or "default"
     local filename = identifier .. ".conf"
-    local preferred_path = "mpv/script-opts/" .. filename
+    -- On Windows, should be something like C:\Users\AAD\AppData\Roaming\mpv\script-opts
+    local preferred_path = mp.get_config_dir() .. "/script-opts/" .. filename
+    msg.info("Preferred path: " .. preferred_path)
     local found_path = mp.find_config_file(preferred_path)
     if found_path then
         return found_path
     end
-    local legacy_path = "lua-settings/" .. filename
+    -- On Linux, should be something like /home/username/.config/mpv/script-opts
+    local legacy_path = mp.get_config_dir() .. "/lua-settings/" .. filename
     found_path = mp.find_config_file(legacy_path)
     if found_path then
         msg.warn(legacy_path .. " is deprecated, use " .. preferred_path .. " instead.")
