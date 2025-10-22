@@ -8,14 +8,13 @@ const targetDir = process.argv[2] ? path.resolve(process.argv[2]) : defaultTarge
 const scriptDir = path.join(__dirname, 'mpv-reencode-cut');
 const distDir = path.join(scriptDir, 'dist');
 
-// Ensure target directory exists and is writable
+// Ensure directory exists and is writable
 function ensureDirectory(dir) {
     try {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true, mode: 0o755 });
             console.log(`Created directory: ${dir}`);
         }
-        // Test write permission
         const testFile = path.join(dir, '.permission-test');
         fs.writeFileSync(testFile, 'test');
         fs.unlinkSync(testFile);
@@ -39,90 +38,74 @@ if (targetDir === defaultTarget && fs.existsSync(targetDir)) {
 
 // Create directory structure
 const dirs = [
+    path.join(targetDir, 'scripts', 'mpv-reencode-cut'),
+    path.join(targetDir, 'scripts', 'mpv-reencode-cut', 'dist'),
     path.join(targetDir, 'scripts', 'mpv-reencode-cut', 'dist', 'utils'),
     path.join(targetDir, 'script-opts')
 ];
 
-// Create all required directories
 for (const dir of dirs) {
-    if (!ensureDirectory(dir)) {
-        process.exit(1);
-    }
+    if (!ensureDirectory(dir)) process.exit(1);
 }
 
-// Copy files with error handling
-function copyFiles(patterns, targetDir) {
-    if (!ensureDirectory(targetDir)) {
-        return false;
-    }
+// Utility to get files matching a simple pattern like "*.lua" or "*.js"
+function getMatchingFiles(dir, extension) {
+    if (!fs.existsSync(dir)) return [];
+    return fs.readdirSync(dir)
+        .filter(f => f.endsWith(extension))
+        .map(f => path.join(dir, f));
+}
+
+// Copy individual files safely
+function copyFiles(files, targetDir) {
+    if (!ensureDirectory(targetDir)) return false;
 
     let success = true;
-    patterns.forEach(pattern => {
+    for (const file of files) {
         try {
-            const files = pattern.includes('*')
-                ? fs.readdirSync(path.dirname(pattern))
-                    .filter(f => f.match(new RegExp('^' + path.basename(pattern).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$')))
-                    .map(f => path.join(path.dirname(pattern), f))
-                : [pattern];
-
-            files.forEach(file => {
-                try {
-                    if (fs.existsSync(file)) {
-                        const targetFile = path.join(targetDir, path.basename(file));
-                        // Overwrite existing files
-                        fs.copyFileSync(file, targetFile, fs.constants.COPYFILE_FICLONE);
-                        // Set read permissions (444: r--r--r--)
-                        fs.chmodSync(targetFile, 0x1a4);
-                        console.log(`Copied: ${file} -> ${targetFile}`);
-                    }
-                } catch (error) {
-                    console.error(`Error copying file ${file}: ${error.message}`);
-                    success = false;
-                }
-            });
+            if (fs.existsSync(file)) {
+                const targetFile = path.join(targetDir, path.basename(file));
+                fs.copyFileSync(file, targetFile, fs.constants.COPYFILE_FICLONE);
+                fs.chmodSync(targetFile, 0o644);
+                console.log(`Copied: ${file} -> ${targetFile}`);
+            }
         } catch (error) {
-            console.error(`Error processing pattern ${pattern}: ${error.message}`);
+            console.error(`Error copying file ${file}: ${error.message}`);
             success = false;
         }
-    });
+    }
     return success;
 }
 
-// Perform all file copies
 let allSuccess = true;
 
 // Copy Lua files
 allSuccess = copyFiles(
-    [path.join(scriptDir, '*.lua')],
+    getMatchingFiles(scriptDir, '.lua'),
     path.join(targetDir, 'scripts', 'mpv-reencode-cut')
 ) && allSuccess;
 
-// Copy main JS files
+// Copy JS files from dist/
 allSuccess = copyFiles(
-    [path.join(distDir, '*.js')],
+    getMatchingFiles(distDir, '.js'),
     path.join(targetDir, 'scripts', 'mpv-reencode-cut', 'dist')
 ) && allSuccess;
 
-// Copy utils JS files
+// Copy JS files from dist/utils/
 allSuccess = copyFiles(
-    [path.join(distDir, 'utils', '*.js')],
+    getMatchingFiles(path.join(distDir, 'utils'), '.js'),
     path.join(targetDir, 'scripts', 'mpv-reencode-cut', 'dist', 'utils')
 ) && allSuccess;
 
-// Copy config file if exists (check both possible locations)
+// Copy config file if it exists
 const configPath = path.join(__dirname, '..', 'script-opts', 'mpv-reencode-cut.conf');
-
-let configCopied = false;
 if (fs.existsSync(configPath)) {
     allSuccess = copyFiles(
         [configPath],
         path.join(targetDir, 'script-opts')
     ) && allSuccess;
-    configCopied = true;
-}
-
-if (!configCopied) {
-    console.log('Config file not found in any of these locations:', possibleConfigPaths);
+} else {
+    console.log('Config file not found.');
 }
 
 if (allSuccess) {
