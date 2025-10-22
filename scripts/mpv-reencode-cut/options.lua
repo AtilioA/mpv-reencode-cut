@@ -3,27 +3,34 @@ local options_module = {}
 local mp = require "mp"
 local msg = require "mp.msg"
 
--- Helper function to determine the config file path
--- Based on mpv's find_config_file function
+-- Determine config file path (absolute if exists, otherwise relative to config dir)
 local function get_config_file_path(identifier)
     identifier = identifier or mp.get_script_name() or "default"
     local filename = identifier .. ".conf"
-    -- On Windows, should be something like C:\Users\AAD\AppData\Roaming\mpv\script-opts
-    local preferred_path = mp.get_config_dir() .. "/script-opts/" .. filename
-    msg.info("Preferred path: " .. preferred_path)
-    local found_path = mp.find_config_file(preferred_path)
+    local preferred_rel = "script-opts/" .. filename
+    local legacy_rel = "lua-settings/" .. filename
+
+    -- Try preferred path first
+    local found_path = mp.find_config_file(preferred_rel)
     if found_path then
         return found_path
     end
-    -- On Linux, should be something like /home/username/.config/mpv/script-opts
-    local legacy_path = mp.get_config_dir() .. "/lua-settings/" .. filename
-    found_path = mp.find_config_file(legacy_path)
+
+    -- Try legacy path
+    found_path = mp.find_config_file(legacy_rel)
     if found_path then
-        msg.warn(legacy_path .. " is deprecated, use " .. preferred_path .. " instead.")
+        msg.warn(legacy_rel .. " is deprecated, use " .. preferred_rel .. " instead.")
         return found_path
     end
-    -- File doesn't exist yet: default to the preferred path
-    return preferred_path
+
+    -- Neither exists — return *absolute* path where it should be
+    local config_dir = mp.find_config_file(".")
+    if config_dir then
+        return config_dir .. "/" .. preferred_rel
+    else
+        -- fallback if mpv has no config dir (rare, e.g. portable builds)
+        return preferred_rel
+    end
 end
 
 local identifier = "mpv-reencode-cut"
