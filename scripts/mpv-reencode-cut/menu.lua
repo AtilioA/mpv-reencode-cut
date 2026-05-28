@@ -61,9 +61,9 @@ local function is_windows()
 end
 
 if is_windows() then
-    mp.msg.info("Windows users: config file should be at %APPDATA%/mpv/script-opts/mpv-lossless-cut.conf")
+    mp.msg.info("Windows users: config file should be at %APPDATA%/mpv/script-opts/mpv-reencode-cut.conf")
 else
-    mp.msg.info("Linux users: config file should be at ~/.config/mpv/script-opts/mpv-lossless-cut.conf")
+    mp.msg.info("Linux users: config file should be at ~/.config/mpv/script-opts/mpv-reencode-cut.conf")
 end
 
 -----------------------------
@@ -82,35 +82,9 @@ local function build_menu_items()
     menu_items = {}
     local options = options_module.get_options()
 
-    -- Get available video encoders from ffmpeg output
+    -- Video renders use HandBrakeCLI, so expose HandBrake encoder names.
     local function get_available_video_encoders()
-        local encoders = {}
-        local res = mp.utils.subprocess({ args = { "ffmpeg", "-encoders" }, capture_stdout = true, capture_stderr = true })
-        if res.status ~= 0 and res.killed_by_us == false then
-            mp.msg.warn("Could not run ffmpeg -encoders; using default encoder.")
-            mp.osd_message(
-                "Could not run ffmpeg -encoders; using default encoders.\nPlease check your ffmpeg installation.", 5)
-            -- Fallback to default encoders
-            return { "libx264", "libx265" }
-        end
-        for line in res.stdout:gmatch("[^\r\n]+") do
-            -- Look for lines beginning with a space and a 'V' flag (video encoder)
-            -- Example line: " V..... libx264             H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10"
-            if line:match("^%s*V") then
-                local enc = line:match("V[%p%w]*%s+(%S+)")
-                if enc and not table_contains(encoders, enc) then
-                    table.insert(encoders, enc)
-                end
-            end
-        end
-        if #encoders == 0 then
-            encoders = { "libx264", "libx265" }
-        end
-
-        -- Popular video encoders to prioritize
-        local popular_video_encoders = { "libx264", "libx265", "h264_nvenc", "hevc_nvenc", "h264_amf", "hevc_amf",
-            "libaom-av1" }
-        return sort_encoders_by_popularity(encoders, popular_video_encoders)
+        return { "x264", "x265", "svt_av1", "nvenc_h264", "nvenc_h265", "qsv_h264", "qsv_h265" }
     end
 
     -- Get available audio encoders from ffmpeg output

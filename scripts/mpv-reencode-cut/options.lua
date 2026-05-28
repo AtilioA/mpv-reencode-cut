@@ -2,6 +2,7 @@ local options_module = {}
 
 local mp = require "mp"
 local msg = require "mp.msg"
+mp.options = require "mp.options"
 
 -- Helper function to get the config directory
 local function get_config_dir()
@@ -92,7 +93,7 @@ local option_types = {
 local options = {
     output_dir = ".",
     multi_cut_mode = "separate",
-    encoder = "libx264",
+    encoder = "x264",
     bitrate = "3M",
     audio_encoder = "libmp3lame",
     audio_bitrate = "192k",

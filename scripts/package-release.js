@@ -3,7 +3,10 @@ const path = require('path');
 
 // Get target directory from command line argument or use default
 const defaultTarget = path.join(__dirname, '..', 'release');
-const targetDir = process.argv[2] ? path.resolve(process.argv[2]) : defaultTarget;
+const args = process.argv.slice(2);
+const cleanTarget = args.includes('--clean');
+const targetArg = args.find(arg => arg !== '--clean');
+const targetDir = targetArg ? path.resolve(targetArg) : defaultTarget;
 
 const scriptDir = path.join(__dirname, 'mpv-reencode-cut');
 const distDir = path.join(scriptDir, 'dist');
@@ -36,11 +39,14 @@ if (targetDir === defaultTarget && fs.existsSync(targetDir)) {
     }
 }
 
+if (cleanTarget && targetDir !== defaultTarget) {
+    cleanManagedInstall(targetDir);
+}
+
 // Create directory structure
 const dirs = [
     path.join(targetDir, 'scripts', 'mpv-reencode-cut'),
     path.join(targetDir, 'scripts', 'mpv-reencode-cut', 'dist'),
-    path.join(targetDir, 'scripts', 'mpv-reencode-cut', 'dist', 'utils'),
     path.join(targetDir, 'script-opts')
 ];
 
@@ -52,7 +58,7 @@ for (const dir of dirs) {
 function getMatchingFiles(dir, extension) {
     if (!fs.existsSync(dir)) return [];
     return fs.readdirSync(dir)
-        .filter(f => f.endsWith(extension))
+        .filter(f => f.endsWith(extension) && !f.endsWith('.test.js'))
         .map(f => path.join(dir, f));
 }
 
@@ -77,6 +83,18 @@ function copyFiles(files, targetDir) {
     return success;
 }
 
+function cleanManagedInstall(targetDir) {
+    const managedScriptDir = path.join(targetDir, 'scripts', 'mpv-reencode-cut');
+    const managedConfigFile = path.join(targetDir, 'script-opts', 'mpv-reencode-cut.conf');
+
+    for (const managedPath of [managedScriptDir, managedConfigFile]) {
+        if (fs.existsSync(managedPath)) {
+            fs.rmSync(managedPath, { recursive: true, force: true });
+            console.log(`Removed stale managed path: ${managedPath}`);
+        }
+    }
+}
+
 let allSuccess = true;
 
 // Copy Lua files
@@ -89,12 +107,6 @@ allSuccess = copyFiles(
 allSuccess = copyFiles(
     getMatchingFiles(distDir, '.js'),
     path.join(targetDir, 'scripts', 'mpv-reencode-cut', 'dist')
-) && allSuccess;
-
-// Copy JS files from dist/utils/
-allSuccess = copyFiles(
-    getMatchingFiles(path.join(distDir, 'utils'), '.js'),
-    path.join(targetDir, 'scripts', 'mpv-reencode-cut', 'dist', 'utils')
 ) && allSuccess;
 
 // Copy config file if it exists

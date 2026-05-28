@@ -1,6 +1,6 @@
 # mpv-reencode-cut
 
-`mpv-reencode-cut` is a modular, scripting video cutting tool for [mpv](https://mpv.io), designed for users who want interactive control over clip creation while re-encoding files—enabling more precise timing than traditional keyframe-based cutting.
+`mpv-reencode-cut` is a modular, scripting video cutting tool for [mpv](https://mpv.io), designed for users who want interactive control over clip creation while re-encoding files, enabling more precise timing than traditional keyframe-based cutting.
 
 ✨ `mpv-reencode-cut` offers:
 
@@ -23,7 +23,7 @@ Perfect for sharing clips, creating highlights, or trimming videos quickly where
 
 - Easily set **start** and **end** times for multiple cuts with `g` and `h` keys.
 - Allows real-time adjustment of:
-  - **Video/audio encoder** (auto-detected from `ffmpeg`)
+  - **Video encoder** for HandBrake and **audio encoder** for ffmpeg audio-only output
   - **Bitrate** (selectable presets)
   - **Multi-cut mode** (`separate` or `merge`)
   - **Audio-only mode** for extracting audio without video
@@ -49,7 +49,7 @@ Perfect for sharing clips, creating highlights, or trimming videos quickly where
 mpv/portable_config/
 ```
 
-1. Ensure [`node`](https://nodejs.org/), [`ffmpeg`](https://www.ffmpeg.org/download.html), and (for streaming support) [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) are available in your system `PATH`.
+1. Ensure [`node`](https://nodejs.org/), [`HandBrakeCLI`](https://handbrake.fr/downloads2.php), [`ffmpeg`](https://www.ffmpeg.org/download.html), and (for streaming support) [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) are available in your system `PATH`.
 
 ---
 
@@ -70,6 +70,8 @@ Open a video in mpv and use the following keybindings:
 
 Rendered files are saved to the `output_dir` (default is the same as the input file's directory). Output filenames include cut indices and timestamps. For streaming sources, the output directory can be set separately and partial or full downloads are supported.
 
+Rendering is dispatched to a detached Node worker. Once a job starts, switching to another file or closing mpv does not cancel the encode. If mpv is still open, the script polls the job status file and shows OSD notifications when the job succeeds or fails. Job JSON, status JSON, and logs are written under `mpv-reencode-cut` in your local state/temp directory, such as `%LOCALAPPDATA%\mpv-reencode-cut` on Windows.
+
 ---
 
 ## ⚙️ Configuration
@@ -86,7 +88,7 @@ Use arrow keys to change settings:
 - `← / →`: change the current option's value
 - `Enter / Esc`: save and exit
 
-Encoders are dynamically listed based on your ffmpeg build output. Audio and video encoders default to `libmp3lame` and `libx264` respectively.
+Video renders use `HandBrakeCLI` and default to the `x264` encoder. Audio-only renders use `ffmpeg` and default to `libmp3lame`.
 
 When in audio-only mode, the menu options will change to reflect audio-specific settings. Output files will be saved with .mp3 extension in this mode.
 
@@ -98,9 +100,28 @@ All changes are persisted to your `script-opts` config (`mpv-reencode-cut.conf`)
 
 - [mpv](https://mpv.io)
 - [Node.js](https://nodejs.org)
+- [HandBrakeCLI](https://handbrake.fr/downloads2.php)
 - [ffmpeg](https://ffmpeg.org)
 
-Make sure both `ffmpeg` and `node` are available in your command-line environment/'PATH'.
+Make sure `HandBrakeCLI`, `ffmpeg`, and `node` are available in your command-line environment/'PATH'.
+
+## Development
+
+The canonical render path is TypeScript compiled to `scripts/mpv-reencode-cut/dist`:
+
+```bash
+npm run check
+npm test
+npm run package
+```
+
+For local testing on Windows, run:
+
+```bash
+npm run dev:install:win
+```
+
+That command builds the latest TypeScript and installs the current Lua, compiled worker scripts, and script options into `%APPDATA%\mpv`. The old `make_cuts.js` path has been removed; `main.lua` writes a typed job JSON, `dispatch.js` starts `worker.js` detached, video jobs use `HandBrakeCLI`, audio-only MP3 jobs use `ffmpeg`, and the worker writes durable status JSON for mpv-side notifications.
 
 ## 👥 Contributing
 
