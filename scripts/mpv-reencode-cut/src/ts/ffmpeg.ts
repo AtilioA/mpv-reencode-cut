@@ -31,7 +31,7 @@ export function buildCutArgs(
             '-map', '0:v:0?',
             '-map', '0:a:0?',
             '-c:v', options.encoder || 'libx264',
-            '-b:v', options.bitrate || '3M',
+            '-b:v', options.bitrate || '4M',
             '-pix_fmt', 'yuv420p',
             '-c:a', 'aac',
             '-b:a', '160k',

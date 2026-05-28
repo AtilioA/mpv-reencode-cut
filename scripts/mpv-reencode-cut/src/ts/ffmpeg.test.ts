@@ -13,7 +13,7 @@ const options: Options = {
     output_dir: '.',
     multi_cut_mode: 'merge',
     encoder: 'libx264',
-    bitrate: '3M',
+    bitrate: '4M',
     handbrake_path: 'HandBrakeCLI',
     audio_encoder: 'libmp3lame',
     audio_bitrate: '192k',

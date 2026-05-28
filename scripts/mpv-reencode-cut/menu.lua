@@ -133,7 +133,7 @@ local function build_menu_items()
         bitrate_options = { "64k", "128k", "192k", "256k", "320k" }
     else
         available_encoders = get_available_video_encoders()
-        bitrate_options = { "500k", "1M", "2M", "3M", "5M", "10M" }
+        bitrate_options = { "500k", "1M", "2M", "4M", "5M", "10M" }
     end
 
     -- Add encoder option

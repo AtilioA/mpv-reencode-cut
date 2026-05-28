@@ -7,7 +7,7 @@ const options: Options = {
     output_dir: '.',
     multi_cut_mode: 'separate',
     encoder: 'x265',
-    bitrate: '3M',
+    bitrate: '4M',
     handbrake_path: 'HandBrakeCLI',
     audio_encoder: 'libmp3lame',
     audio_bitrate: '192k',
@@ -31,7 +31,7 @@ test('video cuts are encoded with HandBrakeCLI-compatible arguments', () => {
 });
 
 test('video bitrate strings are converted to HandBrake kbps values', () => {
-    assert.equal(videoBitrateKbps('3M'), '3000');
+    assert.equal(videoBitrateKbps('4M'), '3000');
     assert.equal(videoBitrateKbps('500k'), '500');
     assert.equal(videoBitrateKbps('2500'), '2500');
     assert.equal(videoBitrateKbps('bad'), '3000');

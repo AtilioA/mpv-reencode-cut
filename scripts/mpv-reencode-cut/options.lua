@@ -7,7 +7,7 @@ mp.options = require "mp.options"
 -- Helper function to get the config directory
 local function get_config_dir()
     -- On Windows, mpv uses %APPDATA%\mpv
-    if package.config:sub(1,1) == '\\' then -- Windows
+    if package.config:sub(1, 1) == '\\' then -- Windows
         local appdata = os.getenv("APPDATA")
         if appdata then
             return appdata .. "\\mpv"
@@ -95,7 +95,7 @@ local options = {
     output_dir = ".",
     multi_cut_mode = "separate",
     encoder = "x264",
-    bitrate = "3M",
+    bitrate = "4M",
     handbrake_path = "HandBrakeCLI",
     audio_encoder = "libmp3lame",
     audio_bitrate = "192k",
