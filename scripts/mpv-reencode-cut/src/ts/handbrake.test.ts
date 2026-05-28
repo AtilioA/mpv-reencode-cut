@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildHandBrakeArgs, videoBitrateKbps } from './handbrake';
+import { buildHandBrakeArgs, resolveHandBrakeCommand, videoBitrateKbps } from './handbrake';
 import { Options } from './types';
 
 const options: Options = {
@@ -8,6 +8,7 @@ const options: Options = {
     multi_cut_mode: 'separate',
     encoder: 'x265',
     bitrate: '3M',
+    handbrake_path: 'HandBrakeCLI',
     audio_encoder: 'libmp3lame',
     audio_bitrate: '192k',
     audio_only: false,
@@ -34,4 +35,24 @@ test('video bitrate strings are converted to HandBrake kbps values', () => {
     assert.equal(videoBitrateKbps('500k'), '500');
     assert.equal(videoBitrateKbps('2500'), '2500');
     assert.equal(videoBitrateKbps('bad'), '3000');
+});
+
+test('HandBrakeCLI resolves from PATH-like environment entries', () => {
+    const command = resolveHandBrakeCommand(options, { PATH: 'C:\\Tools' }, filePath => {
+        return filePath === 'C:\\Tools\\HandBrakeCLI.exe';
+    });
+    assert.equal(command, 'C:\\Tools\\HandBrakeCLI.exe');
+});
+
+test('configured explicit handbrake_path is used when present', () => {
+    const explicit = 'D:\\Apps\\HandBrake\\HandBrakeCLI.exe';
+    const command = resolveHandBrakeCommand({ handbrake_path: explicit }, {}, filePath => filePath === explicit);
+    assert.equal(command, explicit);
+});
+
+test('missing HandBrakeCLI reports a configuration-oriented error', () => {
+    assert.throws(
+        () => resolveHandBrakeCommand(options, { PATH: '' }, () => false),
+        /set handbrake_path/
+    );
 });

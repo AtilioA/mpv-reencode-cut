@@ -60,6 +60,7 @@ local option_types = {
     multi_cut_mode = { type = "string", valid_values = { "separate", "merge" } },
     encoder = { type = "string" },
     bitrate = { type = "string" },
+    handbrake_path = { type = "string" },
     audio_encoder = { type = "string" },
     audio_bitrate = { type = "string" },
     -- For boolean values, we use string representation to avoid MPV's type conversion problems
@@ -95,6 +96,7 @@ local options = {
     multi_cut_mode = "separate",
     encoder = "x264",
     bitrate = "3M",
+    handbrake_path = "HandBrakeCLI",
     audio_encoder = "libmp3lame",
     audio_bitrate = "192k",
     config_path = config_path,

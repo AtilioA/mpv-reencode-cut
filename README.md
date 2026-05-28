@@ -90,6 +90,12 @@ Use arrow keys to change settings:
 
 Video renders use `HandBrakeCLI` and default to the `x264` encoder. Audio-only renders use `ffmpeg` and default to `libmp3lame`.
 
+Set `handbrake_path` in `script-opts/mpv-reencode-cut.conf` to the full executable path, for example:
+
+```ini
+handbrake_path=C:\Program Files\HandBrake\HandBrakeCLI.exe
+```
+
 When in audio-only mode, the menu options will change to reflect audio-specific settings. Output files will be saved with .mp3 extension in this mode.
 
 All changes are persisted to your `script-opts` config (`mpv-reencode-cut.conf`) file.

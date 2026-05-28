@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { buildConcatArgs, buildCutArgs } from './ffmpeg';
-import { buildHandBrakeArgs } from './handbrake';
+import { buildHandBrakeArgs, resolveHandBrakeCommand } from './handbrake';
 import { normalizeCuts, readJob } from './job';
 import { formatTime, outputExtension, resolveOutputDirectory, sanitizeFilename } from './paths';
 import { runRequired } from './process';
@@ -70,7 +70,7 @@ export async function runJob(jobPath: string): Promise<void> {
                 total_cuts: cuts.length,
                 outputs: finalOutputs
             }));
-            const command = job.options.audio_only ? 'ffmpeg' : 'HandBrakeCLI';
+            const command = job.options.audio_only ? 'ffmpeg' : resolveHandBrakeCommand(job.options);
             const args = job.options.audio_only
                 ? buildCutArgs(source.path, outputPath, cut.start, duration, job.options)
                 : buildHandBrakeArgs(source.path, outputPath, cut.start, duration, job.options);

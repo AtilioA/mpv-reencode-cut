@@ -14,6 +14,7 @@ const options: Options = {
     multi_cut_mode: 'merge',
     encoder: 'libx264',
     bitrate: '3M',
+    handbrake_path: 'HandBrakeCLI',
     audio_encoder: 'libmp3lame',
     audio_bitrate: '192k',
     audio_only: true,

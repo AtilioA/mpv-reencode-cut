@@ -5,6 +5,7 @@ export interface Options {
     multi_cut_mode: MultiCutMode;
     encoder: string;
     bitrate: string;
+    handbrake_path: string;
     audio_encoder: string;
     audio_bitrate: string;
     audio_only: boolean;

@@ -9,7 +9,10 @@ export function runCommand(command: string, args: string[], log: (line: string) 
     log(`$ ${[command, ...args].map(quoteArg).join(' ')}`);
 
     return new Promise((resolve, reject) => {
-        const child = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+        const child = spawn(command, args, {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            windowsHide: true
+        });
 
         child.stdout.on('data', chunk => log(chunk.toString().trimEnd()));
         child.stderr.on('data', chunk => log(chunk.toString().trimEnd()));

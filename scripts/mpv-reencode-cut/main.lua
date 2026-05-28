@@ -173,6 +173,7 @@ local function snapshot_options()
         multi_cut_mode = options.multi_cut_mode,
         encoder = options.encoder,
         bitrate = options.bitrate,
+        handbrake_path = options.handbrake_path,
         audio_encoder = options.audio_encoder,
         audio_bitrate = options.audio_bitrate,
         audio_only = options.audio_only,
