@@ -1,6 +1,6 @@
 {
     "name": "mpv-reencode-cut",
-    "version": "1.4.0",
+    "version": "2.0.0",
     "description": "MPV script for cutting and re-encoding videos",
     "main": "scripts/mpv-reencode-cut/dist/worker.js",
     "scripts": {
