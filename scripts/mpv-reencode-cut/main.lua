@@ -26,6 +26,7 @@ package.path = table.concat({
 }, ";")
 
 local menu = require "menu"
+local crop = require "crop"
 local options_module = require "options"
 
 local DISPATCH_SCRIPT_PATH = utils.join_path(utils.join_path(SCRIPT_DIR, "dist"), "dispatch.js")
@@ -227,6 +228,7 @@ local function create_job()
         source = source,
         options = snapshot_options(),
         cuts = complete_cuts,
+        crop = not options.audio_only and crop.margins() or nil,
     }, nil
 end
 
@@ -299,7 +301,8 @@ local function cut_render()
             status_path = status_path_for_job(job_path),
             last_state = "queued",
         }
-        log("Started background cut job: " .. job.id)
+        local size = job.crop and crop.size()
+        log("Started background cut job: " .. job.id .. (size and string.format(" (cropped to %d × %d)", size.w, size.h) or ""))
         msg.info(result.stdout or "")
     else
         msg.error(result.stderr or result.stdout or "unknown dispatcher error")
@@ -315,11 +318,13 @@ mp.add_key_binding("ctrl+g", "cut_toggle_mode", cut_toggle_mode)
 mp.add_key_binding("ctrl+h", "cut_clear", cut_clear)
 mp.add_key_binding("r", "cut_render", cut_render)
 mp.add_key_binding("ctrl+e", "open_menu", menu.open)
+mp.add_key_binding("c", "crop_editor", crop.open_editor)
 
 mp.register_event("start-file", function()
     cuts = {}
     cut_index = 1
     mp.set_property_native("chapter-list", {})
+    crop.reset()
 end)
 
 job_poll_timer = mp.add_periodic_timer(2, poll_jobs)

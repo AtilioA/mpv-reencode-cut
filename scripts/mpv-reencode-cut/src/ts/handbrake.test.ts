@@ -30,6 +30,15 @@ test('video cuts are encoded with HandBrakeCLI-compatible arguments', () => {
     assert.ok(args.includes('--optimize'));
 });
 
+test('a crop is passed to HandBrakeCLI as top:bottom:left:right pixels', () => {
+    const args = buildHandBrakeArgs('input.mkv', 'out.mp4', 0, 1, options, { top: 10, bottom: 20, left: 30, right: 40 });
+    assert.equal(args[args.indexOf('--crop') + 1], '10:20:30:40');
+});
+
+test('video without a crop keeps HandBrake automatic black-bar cropping', () => {
+    assert.ok(!buildHandBrakeArgs('input.mkv', 'out.mp4', 0, 1, options).includes('--crop'));
+});
+
 test('video bitrate strings are converted to HandBrake kbps values', () => {
     assert.equal(videoBitrateKbps('4M'), '3000');
     assert.equal(videoBitrateKbps('500k'), '500');

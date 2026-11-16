@@ -73,7 +73,7 @@ export async function runJob(jobPath: string): Promise<void> {
             const command = job.options.audio_only ? 'ffmpeg' : resolveHandBrakeCommand(job.options);
             const args = job.options.audio_only
                 ? buildCutArgs(source.path, outputPath, cut.start, duration, job.options)
-                : buildHandBrakeArgs(source.path, outputPath, cut.start, duration, job.options);
+                : buildHandBrakeArgs(source.path, outputPath, cut.start, duration, job.options, job.crop);
             await runRequired(command, args, log);
             outputPaths.push(outputPath);
             if (!(job.options.multi_cut_mode === 'merge' && cuts.length > 1)) {

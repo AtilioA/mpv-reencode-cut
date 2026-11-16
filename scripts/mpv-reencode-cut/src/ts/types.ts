@@ -18,6 +18,14 @@ export interface Cut {
     end: number;
 }
 
+/** Pixels to remove from each edge of the source frame. */
+export interface Crop {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+}
+
 export interface SourceInfo {
     path: string;
     filename: string;
@@ -34,6 +42,7 @@ export interface RenderJob {
     source: SourceInfo;
     options: Options;
     cuts: Cut[];
+    crop?: Crop;
 }
 
 export interface PreparedSource {

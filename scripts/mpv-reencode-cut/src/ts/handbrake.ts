@@ -1,14 +1,16 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { Options } from './types';
+import { Crop, Options } from './types';
 
 export function buildHandBrakeArgs(
     inputPath: string,
     outputPath: string,
     start: number,
     duration: number,
-    options: Options
+    options: Options,
+    crop?: Crop
 ): string[] {
+    const cropArgs = crop ? ['--crop', `${crop.top}:${crop.bottom}:${crop.left}:${crop.right}`] : [];
     return [
         '--input', inputPath,
         '--output', outputPath,
@@ -23,7 +25,8 @@ export function buildHandBrakeArgs(
         '--ab', '160',
         '--mixdown', 'stereo',
         '--optimize',
-        '--non-anamorphic'
+        '--non-anamorphic',
+        ...cropArgs
     ];
 }
 

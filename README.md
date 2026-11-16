@@ -7,6 +7,7 @@
 - **Multiple cuts per video**
 - **Optional merging** of cut segments into a single output (when multiple cuts are defined)
 - **Re-encoding**, enabling precise timing and customizable compression
+- **Crop** with a live preview; the output size matches the crop
 - **Audio-only mode** for creating audio clips without video
 - **Streaming support**: cut and re-encode from online sources (YouTube, etc.)
 
@@ -63,10 +64,19 @@ Open a video in mpv and use the following keybindings:
 | `h`        | Set cut end at current time   |
 | `G`        | Set cut start at beginning    |
 | `H`        | Set cut end at end            |
+| `c`        | Open or apply the crop editor |
 | `r`        | Render cuts |
 | `Ctrl + g` | Toggle cut mode (merge/separate) |
 | `Ctrl + h` | Clear all cuts                |
 | `Ctrl + e` | Open configuration menu       |
+
+### Crop
+
+Press `c` to open the crop editor. The full frame shows, and you drag a rectangle over the area to keep. The area outside it goes dark, and its size in source pixels shows in the corner. Press `Enter` (or `c`) to apply, `Del` to go back to the full frame, or `Esc` to cancel.
+
+After you apply a crop, mpv plays only the cropped area, so you see the output frame. All cuts in the job use this crop. The output keeps the crop size and aspect ratio; HandBrake scales it down only if it is larger than 1920×1080. Without a crop, HandBrake removes black bars automatically. The crop resets when a new file loads, and audio-only renders ignore it.
+
+Limits: the editor is not available for rotated video. For streams, the crop assumes that `yt-dlp` downloads the same resolution that mpv plays.
 
 Rendered files are saved to the `output_dir` (default is the same as the input file's directory). Output filenames include cut indices and timestamps. For streaming sources, the output directory can be set separately and partial or full downloads are supported.
 
